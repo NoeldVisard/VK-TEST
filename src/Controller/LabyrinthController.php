@@ -54,14 +54,13 @@ class LabyrinthController extends AbstractController
         $this->visited[$this->start[0]][$this->start[1]] = true;
         $this->cost = array_fill(0, count($this->lbr), array_fill(0, count($this->lbr[0]), INF)); // матрица стоимости пути из стартовой вершины
         $this->cost[$this->start[0]][$this->start[1]] = $this->lbr[$this->start[0]][$this->start[1]];
-        $isFinish = false;
         $currentPoint = [$this->start[0], $this->start[1]];
         $currentCost = $this->lbr[$this->start[0]][$this->start[1]];
         $path = "($currentPoint[0]; $currentPoint[1]), ";
 
         $this->fillOutCostMatrix($currentPoint, $currentCost, $path);
 
-        return new Response("Кратчайший путь: $this->shortestPath");
+        return new Response("<h4>Shortest path: $this->shortestPath</h4>");
     }
 
     private function fillOutCostMatrix(array $currentPoint, int $currentCost, string $path)
@@ -85,8 +84,7 @@ class LabyrinthController extends AbstractController
                     //  если нашли финиш
                     if ($nextPoint[0] == $this->finish[0] & $nextPoint[1] == $this->finish[1]) {
                         $this->shortestPath = $path;
-                        VarDumper::dump('Inside func: ');
-                        VarDumper::dump($path);
+                        echo "Possible path: " . $path . "<br>";
                         continue;
                     }
 
