@@ -11,6 +11,15 @@ use Symfony\Component\VarDumper\VarDumper;
 
 class LabyrinthController extends AbstractController
 {
+    // Нужно было создать для бизнес-логики отдельный класс, но у меня не было времени на это...
+    public array $lbr;
+    public array $start;
+    public array $finish;
+    public array $moves;
+    public array $visited;
+    public array $cost;
+    public string $shortestPath;
+
     #[Route('/labyrinth', name: 'app_labyrinth')]
     public function index(): Response
     {
@@ -24,9 +33,9 @@ class LabyrinthController extends AbstractController
     {
         $data = $request->request->all();
 
-        $lbr = $labyrinthService->parseLabyrinth($data);
-        $start = explode(" ", $data["start"]); // ["0", "1"]
-        $finish = explode(" ", $data["finish"]); // ["0", "9"]
+        $this->lbr = $labyrinthService->parseLabyrinth($data);
+        $this->start = explode(" ", $data["start"]); // ["0", "1"]
+        $this->finish = explode(" ", $data["finish"]); // ["0", "9"]
 //        $lbr = [
 //            [0, 1, 0, 0, 0, 2, 3, 2, 0, 1],
 //            [1, 1, 2, 1, 0, 1, 0, 1, 1, 1],
@@ -40,46 +49,51 @@ class LabyrinthController extends AbstractController
 //            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 //        ]; // test labyrinth array
 
-        $moves = [[0, 1], [0, -1], [1, 0], [-1, 0]]; // возможные направления движения
-        $visited = array_fill(0, count($lbr), array_fill(0, count($lbr[0]), false)); // матрица посещённых вершин
-        $visited[$start[0]][$start[1]] = true;
-        $cost = array_fill(0, count($lbr), array_fill(0, count($lbr[0]), INF)); // матрица стоимости пути из стартовой вершины
-        $cost[$start[0]][$start[1]] = $lbr[$start[0]][$start[1]];
-        $finish = false;
-        $currentPoint = [$start[0], $start[1]];
-        $currentCost = $lbr[$start[0]][$start[1]];
+        $this->moves = [[0, 1], [0, -1], [1, 0], [-1, 0]]; // возможные направления движения
+        $this->visited = array_fill(0, count($this->lbr), array_fill(0, count($this->lbr[0]), false)); // матрица посещённых вершин
+        $this->visited[$this->start[0]][$this->start[1]] = true;
+        $this->cost = array_fill(0, count($this->lbr), array_fill(0, count($this->lbr[0]), INF)); // матрица стоимости пути из стартовой вершины
+        $this->cost[$this->start[0]][$this->start[1]] = $this->lbr[$this->start[0]][$this->start[1]];
+        $isFinish = false;
+        $currentPoint = [$this->start[0], $this->start[1]];
+        $currentCost = $this->lbr[$this->start[0]][$this->start[1]];
+        $path = "($currentPoint[0]; $currentPoint[1]), ";
 
-        while (!$finish) {
-            foreach ($moves as $move) {
-                if (isset($lbr[$currentPoint[0] + $move[0]][$currentPoint[1] + $move[1]])) {
-                    $nextPoint = [$currentPoint[0] + $move[0], $currentPoint[1] + $move[1]];
-                    //  если нашли финиш
-                    if ($nextPoint[0] == $finish[0] & $nextPoint[1] == $finish[1]) {
-                        $finish = true;
-                        break;
-                    }
-                    
-                    if ($lbr[$nextPoint[0]][$nextPoint[1]] == 0) // если стена
-                        continue;
+        $this->fillOutCostMatrix($currentPoint, $currentCost, $path);
 
-                    // если нет, тогда ставим как пройденную вершину
-                    $visited[$nextPoint[0]][$nextPoint[1]] = true;
-                    $currentCost += $lbr[$nextPoint[0]][$nextPoint[1]];
-                    // если новое найденное расстояние до вершины меньше, чем раньше найденное
-                    if ($cost[$nextPoint[0]][$nextPoint[1]] > $currentCost) {
-                        $cost[$nextPoint[0]][$nextPoint[1]] = $currentCost;
-                    }
-                    
-                    // рекурсивный вызов
-                }
-            }
-        }
-
-        return new Response('Путь');
+        return new Response("Кратчайший путь: $this->shortestPath");
     }
 
-    private function fillOutCostMatrix()
+    private function fillOutCostMatrix(array $currentPoint, int $currentCost, string $path)
     {
+        foreach ($this->moves as $move) {
+            if (isset($this->lbr[$currentPoint[0] + $move[0]][$currentPoint[1] + $move[1]])) {
+                $nextPoint = [$currentPoint[0] + $move[0], $currentPoint[1] + $move[1]];
 
+                // если стена
+                if ($this->lbr[$nextPoint[0]][$nextPoint[1]] == 0)
+                    continue;
+
+                // если нет, тогда ставим как пройденную вершину
+                $this->visited[$nextPoint[0]][$nextPoint[1]] = true;
+                $currentCost += $this->lbr[$nextPoint[0]][$nextPoint[1]];
+
+                // если новое найденное расстояние до вершины меньше, чем раньше найденное
+                if ($this->cost[$nextPoint[0]][$nextPoint[1]] > $currentCost) {
+                    $this->cost[$nextPoint[0]][$nextPoint[1]] = $currentCost;
+                    $path .= "($nextPoint[0]; $nextPoint[1]), ";
+                    //  если нашли финиш
+                    if ($nextPoint[0] == $this->finish[0] & $nextPoint[1] == $this->finish[1]) {
+                        $this->shortestPath = $path;
+                        VarDumper::dump('Inside func: ');
+                        VarDumper::dump($path);
+                        continue;
+                    }
+
+                    // рекурсивный вызов
+                    $this->fillOutCostMatrix($nextPoint, $currentCost, $path);
+                } // иначе ничего не вызываем, тк кратчайшее расстояние до точки уже найдено
+            }
+        }
     }
 }
