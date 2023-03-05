@@ -18,7 +18,7 @@ class LabyrinthController extends AbstractController
     public array $moves;
     public array $visited;
     public array $cost;
-    public string $shortestPath;
+    public string $shortestPath = "";
 
     #[Route('/labyrinth', name: 'app_labyrinth')]
     public function index(): Response
@@ -58,40 +58,58 @@ class LabyrinthController extends AbstractController
         $currentCost = $this->lbr[$this->start[0]][$this->start[1]];
         $path = "($currentPoint[0]; $currentPoint[1]), ";
 
-        $this->fillOutCostMatrix($currentPoint, $currentCost, $path);
+        // при разветвлении пути добавлялась лишняя точка лабиринта в путь, пофикшено с добавлением направления
+        $directions = $this->correctDirections($currentPoint);
+        foreach ($directions as $direction) {
+            $this->fillOutCostMatrix($currentPoint, $currentCost, $path, $direction);
+        }
 
         return new Response("<h4>Shortest path: $this->shortestPath</h4>");
     }
 
-    private function fillOutCostMatrix(array $currentPoint, int $currentCost, string $path)
+    private function fillOutCostMatrix(array $currentPoint, int $currentCost, string $path, array $move)
     {
+//        if (isset($this->lbr[$currentPoint[0] + $move[0]][$currentPoint[1] + $move[1]])) {
+            $nextPoint = [$currentPoint[0] + $move[0], $currentPoint[1] + $move[1]];
+
+//            // если стена
+//            if ($this->lbr[$nextPoint[0]][$nextPoint[1]] == 0)
+//                continue;
+
+            // если нет, тогда ставим как пройденную вершину
+            $this->visited[$nextPoint[0]][$nextPoint[1]] = true;
+            $currentCost += $this->lbr[$nextPoint[0]][$nextPoint[1]];
+
+            // если новое найденное расстояние до вершины меньше, чем раньше найденное
+            if ($this->cost[$nextPoint[0]][$nextPoint[1]] > $currentCost) {
+                $this->cost[$nextPoint[0]][$nextPoint[1]] = $currentCost;
+                $path .= "($nextPoint[0]; $nextPoint[1]), "; VarDumper::dump($path);
+                //  если нашли финиш
+                if ($nextPoint[0] == $this->finish[0] & $nextPoint[1] == $this->finish[1]) {
+                    $this->shortestPath = $path;
+                    echo "Possible path: " . $path . "<br>";
+//                    continue;
+                }
+
+                $directions = $this->correctDirections($nextPoint);
+
+                // рекурсивный вызов
+                foreach ($directions as $direction) {
+                    $this->fillOutCostMatrix($nextPoint, $currentCost, $path, $direction);
+                }
+            } // иначе ничего не вызываем, тк кратчайшее расстояние до точки уже найдено
+//        }
+    }
+
+    private function correctDirections(array $currentPoint): array
+    {
+        $directions = [];
         foreach ($this->moves as $move) {
-            if (isset($this->lbr[$currentPoint[0] + $move[0]][$currentPoint[1] + $move[1]])) {
-                $nextPoint = [$currentPoint[0] + $move[0], $currentPoint[1] + $move[1]];
-
-                // если стена
-                if ($this->lbr[$nextPoint[0]][$nextPoint[1]] == 0)
-                    continue;
-
-                // если нет, тогда ставим как пройденную вершину
-                $this->visited[$nextPoint[0]][$nextPoint[1]] = true;
-                $currentCost += $this->lbr[$nextPoint[0]][$nextPoint[1]];
-
-                // если новое найденное расстояние до вершины меньше, чем раньше найденное
-                if ($this->cost[$nextPoint[0]][$nextPoint[1]] > $currentCost) {
-                    $this->cost[$nextPoint[0]][$nextPoint[1]] = $currentCost;
-                    $path .= "($nextPoint[0]; $nextPoint[1]), ";
-                    //  если нашли финиш
-                    if ($nextPoint[0] == $this->finish[0] & $nextPoint[1] == $this->finish[1]) {
-                        $this->shortestPath = $path;
-                        echo "Possible path: " . $path . "<br>";
-                        continue;
-                    }
-
-                    // рекурсивный вызов
-                    $this->fillOutCostMatrix($nextPoint, $currentCost, $path);
-                } // иначе ничего не вызываем, тк кратчайшее расстояние до точки уже найдено
+            if (isset($this->lbr[$currentPoint[0] + $move[0]][$currentPoint[1] + $move[1]])
+                && $this->lbr[$currentPoint[0] + $move[0]][$currentPoint[1] + $move[1]] != 0) {
+                $directions[] = $move;
             }
         }
+        return $directions;
     }
 }
