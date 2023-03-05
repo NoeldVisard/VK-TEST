@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Service\LabyrinthService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,9 +20,13 @@ class LabyrinthController extends AbstractController
     }
 
     #[Route('/labyrinth/action', name: 'labyrinth_action')]
-    public function action(Request $request): Response
+    public function action(Request $request, LabyrinthService $labyrinthService): Response
     {
         $data = $request->request->all();
+
+        $lbr = $labyrinthService->parseLabyrinth($data);
+        $start = $data["start"];
+        $finish = $data["finish"];
 
         $lbr = [
             [0, 1, 0, 0, 0, 2, 3, 2, 0, 1],
