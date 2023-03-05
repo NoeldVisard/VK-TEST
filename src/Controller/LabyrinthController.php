@@ -69,12 +69,7 @@ class LabyrinthController extends AbstractController
 
     private function fillOutCostMatrix(array $currentPoint, int $currentCost, string $path, array $move)
     {
-//        if (isset($this->lbr[$currentPoint[0] + $move[0]][$currentPoint[1] + $move[1]])) {
             $nextPoint = [$currentPoint[0] + $move[0], $currentPoint[1] + $move[1]];
-
-//            // если стена
-//            if ($this->lbr[$nextPoint[0]][$nextPoint[1]] == 0)
-//                continue;
 
             // если нет, тогда ставим как пройденную вершину
             $this->visited[$nextPoint[0]][$nextPoint[1]] = true;
@@ -83,12 +78,11 @@ class LabyrinthController extends AbstractController
             // если новое найденное расстояние до вершины меньше, чем раньше найденное
             if ($this->cost[$nextPoint[0]][$nextPoint[1]] > $currentCost) {
                 $this->cost[$nextPoint[0]][$nextPoint[1]] = $currentCost;
-                $path .= "($nextPoint[0]; $nextPoint[1]), "; VarDumper::dump($path);
+                $path .= "($nextPoint[0]; $nextPoint[1]), ";
                 //  если нашли финиш
                 if ($nextPoint[0] == $this->finish[0] & $nextPoint[1] == $this->finish[1]) {
                     $this->shortestPath = $path;
                     echo "Possible path: " . $path . "<br>";
-//                    continue;
                 }
 
                 $directions = $this->correctDirections($nextPoint);
