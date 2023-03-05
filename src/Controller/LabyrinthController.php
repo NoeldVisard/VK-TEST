@@ -3,8 +3,10 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\VarDumper\VarDumper;
 
 class LabyrinthController extends AbstractController
 {
@@ -16,4 +18,23 @@ class LabyrinthController extends AbstractController
         ]);
     }
 
+    #[Route('/labyrinth/action', name: 'labyrinth_action')]
+    public function action(Request $request): Response
+    {
+        $data = $request->request->all();
+
+        $lbr = [
+            [0, 1, 0, 0, 0, 2, 3, 2, 0, 1],
+            [1, 1, 2, 1, 0, 1, 0, 1, 1, 1],
+            [1, 0, 0, 3, 4, 5, 0, 0, 0, 1],
+            [1, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+            [0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ];
+        return new Response('Путь');
+    }
 }
